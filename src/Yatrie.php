@@ -532,10 +532,13 @@ class Yatrie
 
     /**
      * @param string $str
-     * @return int
+     * @return int|bool
      */
     function unpack_24(string $str)
     {
+        if (strlen($str) < 3) {
+            return false;
+        }
         return (ord($str[2]) << 16) + (ord($str[1]) << 8) + ord($str[0]);
     }
 
