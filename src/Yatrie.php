@@ -74,9 +74,9 @@ class Yatrie
         '\'' => 45, '’' => 46,
         // 47 was prev flag value, skipped for compat
         'a' => 48, 'b' => 49, 'c' => 50, 'd' => 51, 'e' => 52, 'f' => 53, 'g' => 54, 'h' => 55, 'i' => 56,
-        'j' => 57, 'l' => 58, 'm' => 59, 'n' => 60, 'o' => 61, 'p' => 62,
-        'q' => 63, 'r' => 64, 's' => 65, 't' => 66, 'u' => 67, 'v' => 68, 'w' => 69, 'x' => 70, 'y' => 71, 'z' => 72,
-        'flag' => 73,
+        'j' => 57, 'k' => 58, 'l' => 59, 'm' => 60, 'n' => 61, 'o' => 62, 'p' => 63,
+        'q' => 64, 'r' => 65, 's' => 66, 't' => 67, 'u' => 68, 'v' => 69, 'w' => 70, 'x' => 71, 'y' => 72, 'z' => 73,
+        'flag' => 74,
         );
 
     /**
@@ -90,8 +90,8 @@ class Yatrie
         6 => 39, 7 => 40, 8 => 41, 9 => 42, '-' => 43, '\'' => 44, '’' => 45,
 
         'a' => 47, 'b' => 48, 'c' => 49, 'd' => 50, 'e' => 51, 'f' => 52, 'g' => 53, 'h' => 54, 'i' => 55, 'j' => 56,
-        'l' => 57, 'm' => 58, 'n' => 59, 'o' => 60, 'p' => 61, 'q' => 62, 'r' => 63, 's' => 64, 't' => 65, 'u' => 66,
-        'v' => 67, 'w' => 68, 'x' => 69, 'y' => 70, 'z' => 71
+        'k' => 57, 'l' => 58, 'm' => 59, 'n' => 60, 'o' => 61, 'p' => 62, 'q' => 63, 'r' => 64, 's' => 65, 't' => 66, 'u' => 67,
+        'v' => 68, 'w' => 69, 'x' => 70, 'y' => 71, 'z' => 72
     );
 
 
@@ -593,10 +593,6 @@ class Yatrie
     public function trie_add(string $word)
     {
         $abc = $this->str_split_rus_mod($word);
-        if (!$abc) {
-            echo "before add $word\n";
-            print_r($abc);
-        }
         $cnt = count($abc);
 
 
@@ -604,8 +600,16 @@ class Yatrie
         $parent_id = $this->codepage_index[$abc[0]];
 
         //we save second char to the first letter node etc
+        $saved = true;
         for ($i = 1; $i < $cnt; ++$i) {
             $parent_id = $this->trie_char_add($i, $parent_id, $abc[$i]);
+            if (!$parent_id) {
+                $saved = false;
+                break;
+            }
+        }
+        if (!$saved) {
+            return null;
         }
         //add last char flag for the last char
         $this->node_set_char_flag($parent_id);
@@ -680,6 +684,11 @@ class Yatrie
         list($mask, $ref_id) = $this->node_get_raw($block, $offset);
 
         //number of bits before the current char position in the codepage
+        if (!isset($this->codepage[$char])) {
+            // TODO log failures
+            return null;
+        }
+
         $bits = $this->codepage[$char] === 0 ? 0 : $this->codepage[$char] - 1;
 
         //calculate reference position in the references sequence
