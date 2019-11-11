@@ -3,36 +3,8 @@ require_once(dirname(__FILE__) . '/src/Yatrie.php');
 require_once(dirname(__FILE__) . '/etc/bmark.php');
 
 $t = new Yatrie();
-$ww[] = 'аа';
-$ww[] = 'аб';
-$ww[] = 'ав';
-$ww[] = 'аг';
-$ww[] = 'ад';
-$ww[] = 'ае';
-$ww[] = 'аё';
-$ww[] = 'аж';
-$ww[] = 'аз';
-$ww[] = 'аи';
-$ww[] = 'ак';
-$ww[] = 'ал';
-$ww[] = 'ам';
-$ww[] = 'ан';
-$ww[] = 'ао';
-$ww[] = 'ап';
-$ww[] = 'ар';
-$ww[] = 'ас';
-$ww[] = 'ат';
-$ww[] = 'аф';
-$ww[] = 'ааа';
-$ww[] = 'ааб';
-$ww[] = 'аав';
-$ww[] = 'ааг';
-$ww[] = 'аад';
-$ww[] = 'аае';
-$ww[] = 'ааё';
-$ww[] = 'ааж';
-$ww[] = 'ааз';
-$ww[] = 'ааи';
+$ww[] = 'hello';
+$ww[] = 'world';
 
 foreach ($ww as $w) {
 //    list($mask,$ref_id) = $t->node_get(0);
