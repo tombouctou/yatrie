@@ -72,13 +72,16 @@ class Yatrie
         'ч' => 25, 'ш' => 26, 'щ' => 27, 'ъ' => 28, 'ы' => 29, 'ь' => 30, 'э' => 31, 'ю' => 32, 'я' => 33, 0 => 34,
         1 => 35, 2 => 36, 3 => 37, 4 => 38, 5 => 39, 6 => 40, 7 => 41, 8 => 42, 9 => 43, '-' => 44,
         '\'' => 45, '’' => 46,
-        'flag' => 100,
+        // 47 was prev flag value, skipped for compat
         'a' => 48, 'b' => 49, 'c' => 50, 'd' => 51, 'e' => 52, 'f' => 53, 'g' => 54, 'h' => 55, 'i' => 56,
         'j' => 57, 'l' => 58, 'm' => 59, 'n' => 60, 'o' => 61, 'p' => 62,
-        'q' => 63, 'r' => 64, 's' => 65, 't' => 66, 'u' => 67, 'v' => 68, 'w' => 69, 'x' => 70, 'y' => 71, 'z' => 72);
+        'q' => 63, 'r' => 64, 's' => 65, 't' => 66, 'u' => 67, 'v' => 68, 'w' => 69, 'x' => 70, 'y' => 71, 'z' => 72,
+        'flag' => 73,
+        );
 
     /**
      * @var array
+     * BEWARE: indexes here are one less than values in $codepage above
      */
     public $codepage_index = array('а' => 0, 'б' => 1, 'в' => 2, 'г' => 3, 'д' => 4, 'е' => 5, 'ё' => 6, 'ж' => 7,
         'з' => 8, 'и' => 9, 'й' => 10, 'к' => 11, 'л' => 12, 'м' => 13, 'н' => 14, 'о' => 15, 'п' => 16, 'р' => 17,
@@ -86,8 +89,10 @@ class Yatrie
         'ы' => 28, 'ь' => 29, 'э' => 30, 'ю' => 31, 'я' => 32, 0 => 33, 1 => 34, 2 => 35, 3 => 36, 4 => 37, 5 => 38,
         6 => 39, 7 => 40, 8 => 41, 9 => 42, '-' => 43, '\'' => 44, '’' => 45,
 
-        'a' => 48, 'b' => 49, 'c' => 50, 'd' => 51, 'e' => 52, 'f' => 53, 'g' => 54, 'h' => 55, 'i' => 56, 'j' => 57, 'l' => 58, 'm' => 59, 'n' => 60, 'o' => 61, 'p' => 62, 'q' => 63, 'r' => 64, 's' => 65, 't' => 66, 'u' => 67, 'v' => 68, 'w' => 69, 'x' => 70, 'y' => 71, 'z' => 72);
-
+        'a' => 47, 'b' => 48, 'c' => 49, 'd' => 50, 'e' => 51, 'f' => 52, 'g' => 53, 'h' => 54, 'i' => 55, 'j' => 56,
+        'l' => 57, 'm' => 58, 'n' => 59, 'o' => 60, 'p' => 61, 'q' => 62, 'r' => 63, 's' => 64, 't' => 65, 'u' => 66,
+        'v' => 67, 'w' => 68, 'x' => 69, 'y' => 70, 'z' => 71
+    );
 
     /**
      * Yatrie constructor.
@@ -98,6 +103,15 @@ class Yatrie
         $this->char_count = count($this->codepage_index);
         $this->size_node = $this->size_mask + $this->size_ref_id; //each node is a node mask + node reference to refs
         $this->init_trie($dic);
+    }
+
+    public function load(string $name)
+    {
+        $this->init_trie([
+            $name . '_headers.txt',
+            $name . '_nodes.txt.gz',
+            $name . '_refs.txt.gz',
+        ]);
     }
 
     /**
@@ -133,6 +147,17 @@ class Yatrie
 
         }
 
+    }
+
+    public function save_trie(string $name = 'dic') {
+        $headersName = $name . '_headers.txt';
+        $nodesName = $name . '_nodes.txt';
+        $refsName = $name . '_refs.txt';
+        file_put_contents($headersName, serialize([$this->id_node, $this->id_ref]));
+        file_put_contents($nodesName, serialize($this->nodes));
+        file_put_contents($refsName, serialize($this->refs));
+        exec("gzip $nodesName");
+        exec("gzip $refsName");
     }
 
 
