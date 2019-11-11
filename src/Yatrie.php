@@ -593,10 +593,17 @@ class Yatrie
     public function trie_add(string $word)
     {
         $abc = $this->str_split_rus_mod($word);
+        if (!$abc) {
+            return null;
+        }
+
         $cnt = count($abc);
 
-
         //this is the first letter
+        if (!isset($this->codepage_index[$abc[0]])) {
+            return null;
+        }
+
         $parent_id = $this->codepage_index[$abc[0]];
 
         //we save second char to the first letter node etc
