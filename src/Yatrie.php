@@ -600,7 +600,7 @@ class Yatrie implements TrieInterface
      *
      * @return int
      */
-    private function trie_char_add(int $parent_id, string $char)
+    public function trie_char_add(int $parent_id, string $char)
     {
         //get memory block number
         $block = &$this->nodes_block($parent_id);

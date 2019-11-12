@@ -1,5 +1,6 @@
 <?php
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 require_once(dirname(__FILE__) . '/../vendor/autoload.php');
@@ -276,6 +277,7 @@ class TestYatrie extends TestCase
      */
     public function test_trie_char_add(array $words, int $expected)
     {
+        /** @var Reflect|Yatrie $t */
         $t = new Reflect(new Yatrie());
         $shift = $t->id_node; //already created nodes
 
@@ -306,6 +308,7 @@ class TestYatrie extends TestCase
     {
         $c = new Yatrie();
         $this->class = new Reflect($c);
+        /** @var Reflect|Yatrie $t */
         $t = &$this->class;
         $res = $t->pack_24($int);
         $i = $t->unpack_24($res);
@@ -323,6 +326,7 @@ class TestYatrie extends TestCase
     {
         $c = new Yatrie();
         $this->class = new Reflect($c);
+        /** @var Reflect|Yatrie $t */
         $t = &$this->class;
         $res = $t->pack_48($int);
         $i = $t->unpack_48($res);
@@ -365,6 +369,9 @@ class TestYatrie extends TestCase
     /**
      * @test
      * @dataProvider data_unpack_48
+     *
+     * @param string $str
+     * @param int    $expected
      */
     public function test_unpack_mod(string $str, int $expected)
     {
@@ -388,7 +395,7 @@ class TestYatrie extends TestCase
     }
 
     /**
-     * @return \PHPUnit\Framework\MockObject\MockObject
+     * @return MockObject|Yatrie
      */
     public function class_mock_create()
     {
@@ -498,13 +505,8 @@ class TestYatrie extends TestCase
 
     /**
      * @test
-     * @dataProvider data_node_make
-     *
-     * @param string|null $mask
-     * @param string|null $refs
-     * @param string|null $expected
      */
-    public function test_node_make(?string $mask = null, ?string $refs = null, ?string $expected = null)
+    public function test_node_make()
     {
         $t = $this->class_mock_create();
 
@@ -667,12 +669,13 @@ class TestYatrie extends TestCase
      */
     public function test_node_set_char_flag(int $id)
     {
+        /** @var Reflect|Yatrie $t */
         $t = new Reflect(new Yatrie());
         $t->node_set_char_flag($id);
 
-        list($mask, $ref_id) = $t->node_get($id);
-        //check flag bit
-        $this->assertEquals($t->bit_set(0, $t->codepage['flag']), $mask);
+        list($mask, ) = $t->node_get($id);
+        $bitmap = 0;
+        $this->assertEquals($t->bit_set($bitmap, $t->codepage['flag']), $mask);
     }
 
     /**
@@ -683,6 +686,7 @@ class TestYatrie extends TestCase
      */
     public function test_node_get_char_flag(int $id)
     {
+        /** @var Reflect|Yatrie $t */
         $t = new Reflect(new Yatrie());
 
         $this->assertFalse($t->node_get_char_flag($id));
@@ -707,6 +711,7 @@ class TestYatrie extends TestCase
      */
     public function test_trie_add(array $words)
     {
+        /** @var Reflect|Yatrie $t */
         $t = new Reflect(new Yatrie());
 
         foreach ($words as $i => $word) {
@@ -818,6 +823,7 @@ class TestYatrie extends TestCase
     public function test_ref_insert()
     {
         $class = new Yatrie();
+        /** @var Reflect|Yatrie $t */
         $t = new Reflect($class);
         $refs = $t->str_pad_null($t->size_ref * $t->size_block);
         $size_check = $size_init = strlen($refs);
@@ -871,7 +877,7 @@ class TestYatrie extends TestCase
     {
         $t = new Yatrie();
         $size = $t->size_ref * count($t->codepage); //max refs size
-        $check = $block = str_repeat("\0", $t->size_block * $t->size_ref); //empty block
+        $block = str_repeat("\0", $t->size_block * $t->size_ref); //empty block
         $refs = str_repeat("\0", $size); //empty refs
         $t->ref_insert($refs, $ref, $pos);
         //manual save refs to the block
@@ -886,18 +892,24 @@ class TestYatrie extends TestCase
 
     /**
      * @param int $ref_id
-     * @param int $pos
-     * @param int $ref
      * @test
-     * @dataProvider data_ref_insert
+     * @dataProvider data_ref_short
      */
-    public function test_refs_offset(int $ref_id, int $pos, int $ref)
+    public function test_refs_offset(int $ref_id)
     {
         $t = new Yatrie();
         $expected = $ref_id % $t->size_block * $t->size_ref;
         $res = $t->refs_offset($ref_id);
         $this->assertEquals($expected, $res);
 
+    }
+
+    /**
+     * @return array
+     */
+    public function data_ref_short()
+    {
+        return [[0], [0], [10], [500], [601]];
     }
 
     /**
