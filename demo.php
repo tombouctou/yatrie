@@ -13,6 +13,6 @@ if (empty($argv[1])) {
 }
 
 
-$res = $trie->trie_check($argv[1]);
+$res = $trie->check($argv[1]);
 $res = $res !== false ? " found word: " . $argv[1] . " node_id: $res " : "not found: " . $argv[1];
 echo "$res\n";

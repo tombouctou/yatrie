@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @method trie_remove($word)
+ */
 class Reflect
 {
     /** @var string */

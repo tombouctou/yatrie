@@ -1,9 +1,6 @@
 <?php
 
-/**
- * Class Yatrie
- */
-class Yatrie
+class Yatrie implements TrieInterface
 {
 
     public $deal = []; //deallocated memory array to store deallocated memory blocks for the future reuse
@@ -19,10 +16,6 @@ class Yatrie
      * @var int
      */
     public $char_count;
-    /**
-     * @var int
-     */
-    public $size_refs;
     /**
      * @var int
      */
@@ -82,7 +75,6 @@ class Yatrie
         'v' => 21, 'w' => 22, 'x' => 23, 'y' => 24, 'z' => 25,
         0 => 33, 1 => 34, 2 => 35, 3 => 36, 4 => 37, 5 => 38,
         6 => 39, 7 => 40, 8 => 41, 9 => 42, '-' => 43, '\'' => 44, '’' => 45,
-
     );
 
 
@@ -120,54 +112,8 @@ class Yatrie
             'z' => 122,
         );
 
-    private $rbyte3 = [];
-    private $rbyte2 = [];
-
-    private $rbyte1 = array(
-            '2d' => '-',
-            27 => '\'',
-            30 => 0,
-            31 => 1,
-            32 => 2,
-            33 => 3,
-            34 => 4,
-            35 => 5,
-            36 => 6,
-            37 => 7,
-            38 => 8,
-            39 => 9,
-             97 => 'a',
-             98 => 'b',
-             99 => 'c',
-            100 => 'd',
-            101 => 'e',
-            102 => 'f',
-            103 => 'g',
-            104 => 'h',
-            105 => 'i',
-            106 => 'j',
-            107 => 'k',
-            108 => 'l',
-            109 => 'm',
-            110 => 'n',
-            111 => 'o',
-            112 => 'p',
-            113 => 'q',
-            114 => 'r',
-            115 => 's',
-            116 => 't',
-            117 => 'u',
-            118 => 'v',
-            119 => 'w',
-            120 => 'x',
-            121 => 'y',
-            122 => 'z',
-        );
-
-
     /**
-     * Yatrie constructor.
-     * @param string|null $dic
+     * @param array $dic
      */
     public function __construct(array $dic = null)
     {
@@ -187,14 +133,14 @@ class Yatrie
 
     /**
      * trie initialization method
-     * @param string|null $dic
+     *
+     * @param array $dic
      */
     public function init_trie(array $dic = null)
     {
         if (empty($dic)) {
             $this->layer_make_empty();
         } else {
-
             //load last created ids from headers file
             list($this->id_node, $this->id_ref) = unserialize(file_get_contents($dic[0]));
 
@@ -324,11 +270,9 @@ class Yatrie
         return $id & $this->mod;
     }
 
-
     /**
      * Make new node method
-     * @param string|null $mask
-     * @param string|null $refs
+     *
      * @return int
      */
     public function node_make()
@@ -393,11 +337,13 @@ class Yatrie
         }
     }
 
-
     /**
      * this method for saving raw node data
-     * @param int $id
-     * @param int $mask
+     *
+     * @param string $block
+     * @param int    $offset
+     * @param string $node
+     *
      * @return string
      */
     public function node_set_raw(string &$block, int $offset, string $node)
@@ -405,10 +351,10 @@ class Yatrie
         return $block = substr($block, 0, $offset) . $node . substr($block, $offset + $this->size_node);
     }
 
-
     /**
      * @param int $id
-     * @return int
+     *
+     * @return array
      */
     public function node_get(int $id)
     {
@@ -418,8 +364,11 @@ class Yatrie
 
     /**
      * this method for getting raw node data
-     * @param int $id
-     * @return int
+     *
+     * @param string $block
+     * @param int    $offset
+     *
+     * @return array
      */
     public function node_get_raw(string &$block, int $offset)
     {
@@ -535,19 +484,6 @@ class Yatrie
 
     /**
      * @param int $id
-     * @return string
-     */
-    public function node_clear_char_flag(int $id)
-    {
-        $block = &$this->nodes_block($id);
-        $offset = $this->node_offset($id);
-        $node = $this->node_get_raw($block, $offset);
-        $this->bit_clear($node[0], $this->codepage['flag']);
-        return $this->node_set_raw($block, $offset, $this->pack_48($node[0]) . $this->pack_24($node[1]));
-    }
-
-    /**
-     * @param int $id
      * @return bool
      */
     public function node_get_char_flag(int $id)
@@ -566,17 +502,18 @@ class Yatrie
         $offset = $this->node_offset($id);
         $node = $this->node_get_raw($block, $offset);
         $this->bit_set($node[0], $this->codepage['flag']);
+
         return $this->node_set_raw($block, $offset, $this->pack_48($node[0]) . $this->pack_24($node[1]));
     }
 
-
     /**
      * @param string $word
-     * @return string
+     *
+     * @return int|null
      */
-    public function trie_add(string $word)
+    public function add(string $word): ?int
     {
-        $abc = $this->str_split_rus_mod($word);
+        $abc = $this->str_split_mod($word);
         if (!$abc) {
             return null;
         }
@@ -703,7 +640,7 @@ class Yatrie
 
     public function trie_word_nodes(string $word)
     {
-        $abc = $this->str_split_rus_mod($word);
+        $abc = $this->str_split_mod($word);
         $cnt = count($abc);
         $res = [];
 
@@ -721,86 +658,6 @@ class Yatrie
         return $this->node_get_char_flag($parent_id) === false ? false : $res;
     }
 
-
-    /**
-     * @param string $word
-     * @return string
-     */
-    public function trie_remove(string $word)
-    {
-        $nodes = $this->trie_word_nodes($word);
-        if ($nodes === false) {
-            return false;
-        }
-
-        $last = count($nodes) - 1;
-        //first we clear "last char" flag
-        $this->node_clear_char_flag($nodes[$last][0]);
-
-        //flag to store info if the previous node was deleted
-        $deleted = false;
-
-        //iterate nodes in reverse order
-        for ($i = $last; $i > -1; --$i) {
-            list($parent_id, $char) = $nodes[$i];
-
-            //get node
-            $block = &$this->nodes_block($parent_id);
-            $offset = $this->node_offset($parent_id);
-            list($mask, $ref_id) = $this->node_get_raw($block, $offset);
-
-            //current node refs amount
-            $refs_amount_initial = $refs_amount = $this->bit_count($mask, 46);
-            //check last char flag
-            $flag = $this->bit_get($mask, $this->codepage['flag']) ? true : false;
-
-            if ($deleted) {
-                $this->bit_clear($mask, $this->codepage[$nodes[$i + 1][1]]);
-                //decrement $refs_amount
-                --$refs_amount;
-            }
-
-            //if the node doesn't have references and last char flag is not set we can delete it
-            if ($refs_amount === 0 && !$flag) {
-                $this->node_remove($block, $offset, $parent_id, $ref_id, $refs_amount_initial);
-                $deleted = true;
-            } else if ($deleted) { //if the node was changed we need to change its references
-
-                $size = $this->size_ref * $refs_amount_initial;
-                $refs = $this->refs_get($ref_id, $size);
-
-                //number of bits before the char position in the codepage
-                $bits = $this->codepage[$nodes[$i + 1][1]] === 0 ? 0 : $this->codepage[$nodes[$i + 1][1]] - 1;
-                $pos = $this->bit_count($mask, $bits);
-
-                $this->ref_remove($refs, $pos);
-
-                //new refs size
-                $size_new = $this->size_ref * $refs_amount;
-
-                //reallocate used or allocate new refs memory
-                $last_ref_id = $this->id_ref;
-                $ref_id = $this->refs_get_memory($size_new);
-
-                $refs_block = &$this->refs_block($ref_id);
-
-                //if new memory allocated
-                if ($last_ref_id !== $this->id_ref) {
-                    $this->refs_set($refs_block, $refs);
-                    //otherwise used memory allocated
-                } else {
-                    $this->refs_set($refs_block, $refs, $this->refs_offset($ref_id), $size_new);
-                }
-
-                $deleted = false;
-            } else {
-                $deleted = false;
-            }
-        }
-
-        return true;
-    }
-
     private function refs_get_memory(int $size)
     {
         $ref_id = $this->refs_reallocate($size);
@@ -812,28 +669,13 @@ class Yatrie
         return $ref_id;
     }
 
-    private function ref_remove(string &$refs, int $ref_pos)
-    {
-        $offset = $this->size_ref * $ref_pos;
-        $refs = substr($refs, 0, $offset) . substr($refs, $offset + $this->size_ref);
-        return $refs;
-    }
-
-    private function node_remove(string &$block, int $offset, int $parent_id, int $ref_id, int $refs_amount)
-    {
-        //first deallocate refs memory
-        $this->deal[$refs_amount * $this->size_ref][] = $ref_id;
-        //clear node mask and reference
-        return $this->node_set_raw($block, $offset, $this->str_pad_null($this->size_node));
-    }
-
     /**
      * @param string $word
      * @return bool
      */
-    public function trie_check(string $word)
+    public function check(string $word)
     {
-        $abc = $this->str_split_rus_mod($word);
+        $abc = $this->str_split_mod($word);
         if (!$abc) {
             return false;
         }
@@ -852,13 +694,13 @@ class Yatrie
         return $this->node_get_char_flag($parent_id) === false ? false : $parent_id;
     }
 
-
     /**
      * @param int $bitmap
      * @param int $bit
+     *
      * @return int
      */
-    private function bit_set(int &$bitmap, int $bit)
+    public function bit_set(int &$bitmap, int $bit)
     {
         $bitmap |= 1 << $bit - 1;
         return $bitmap;
@@ -867,9 +709,10 @@ class Yatrie
     /**
      * @param int $bitmap
      * @param int $bit
+     *
      * @return bool|int
      */
-    private function bit_clear(int &$bitmap, int $bit)
+    public function bit_clear(int &$bitmap, int $bit)
     {
         $bitmap &= ~(1 << $bit - 1);
         return $bitmap;
@@ -878,19 +721,21 @@ class Yatrie
     /**
      * @param int $bitmap
      * @param int $bit
+     *
      * @return bool
      */
-    private function bit_get(int $bitmap, int $bit)
+    public function bit_get(int $bitmap, int $bit)
     {
         return (bool)(($bitmap >> $bit - 1) & 1);
     }
 
-
     /**
-     * @param int $bmask
+     * @param int      $i
+     * @param int|null $length
+     *
      * @return int
      */
-    private function bit_count(int $i, int $length = null)
+    public function bit_count(int $i, int $length = null)
     {
         if ($length > 0) {
             $i &= (2 << $length - 1) - 1; // 2 << $i === pow(2,$i-1) bit shift is about 3% faster than pow()
@@ -914,7 +759,7 @@ class Yatrie
      * @param string $word
      * @return array|bool
      */
-    public function str_split_rus_mod(string $word)
+    public function str_split_mod(string $word)
     {
         $res = array();
         for ($i = 0, $len = strlen($word); $i < $len;) {
@@ -943,40 +788,4 @@ class Yatrie
 
         return $res;
     }
-
-
-    /**
-     * @param string $word
-     * @return array|bool
-     */
-    private function str_split_rus(string $word)
-    {
-        $res = array();
-        for ($i = 0, $len = strlen($word); $i < $len;) {
-            $hex = bin2hex(substr($word, $i, 2));
-            if (isset($this->rbyte2[$hex])) {
-                $res[] = $this->rbyte2[$hex];
-                $i += 2;
-                continue;
-            }
-
-            $hex = bin2hex(substr($word, $i, 1));
-            if (isset($this->rbyte1[$hex])) {
-                $res[] = (string)$this->rbyte1[$hex];
-                $i += 1;
-                continue;
-            }
-
-            $hex = bin2hex(substr($word, $i, 3));
-            if (isset($this->rbyte3[$hex])) {
-                $res[] = $this->rbyte3[$hex];
-                $i += 3;
-                continue;
-            }
-            return false; //if we are here then unknown symbol detected
-        }
-        return $res;
-    }
-
-
 }
