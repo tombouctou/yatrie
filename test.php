@@ -7,9 +7,6 @@ $ww[] = 'hello';
 $ww[] = 'world';
 
 foreach ($ww as $w) {
-//    list($mask,$ref_id) = $t->node_get(0);
-//    $m = decbin($mask);
-//    print "$m $ref_id\n";
     $t->trie_add($w);
 }
 foreach ($ww as $w) {
@@ -18,6 +15,3 @@ foreach ($ww as $w) {
         print "$w failed\n";
     }
 }
-
-//var_dump($t->nodes);
-//var_dump($t->refs);

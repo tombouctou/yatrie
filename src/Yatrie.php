@@ -41,10 +41,6 @@ class Yatrie
     public $power = 16; //power of two to get $size_block value
     public $mod = 65535; //value to get $i % $size_block. ($i & $mod === $i % $size_block but faster)
 
-    public $size_block_refs = 131072; //number of refs in 1 refs array block
-    public $power_refs = 17; //power of two to get $size_block_refs value
-    public $mod_refs = 131071; //value to get $i % $size_block_refs. ($i & $mod_refs === $i % $size_block_refs but faster)
-
     /**
      * @var int
      */
@@ -91,19 +87,13 @@ class Yatrie
 
 
     private $byte3 = [];
-    //private $byte3 = array('’' => 'e28099',);
 
     private $byte2 = [];
-    /*private $byte2 = array('а' => 'd0b0', 'б' => 'd0b1', 'в' => 'd0b2', 'г' => 'd0b3', 'д' => 'd0b4',
-        'е' => 'd0b5', 'ё' => 'd191', 'ж' => 'd0b6', 'з' => 'd0b7', 'и' => 'd0b8', 'й' => 'd0b9', 'к' => 'd0ba',
-        'л' => 'd0bb', 'м' => 'd0bc', 'н' => 'd0bd', 'о' => 'd0be', 'п' => 'd0bf', 'р' => 'd180', 'с' => 'd181',
-        'т' => 'd182', 'у' => 'd183', 'ф' => 'd184', 'х' => 'd185', 'ц' => 'd186', 'ч' => 'd187', 'ш' => 'd188',
-        'щ' => 'd189', 'ъ' => 'd18a', 'ы' => 'd18b', 'ь' => 'd18c', 'э' => 'd18d', 'ю' => 'd18e', 'я' => 'd18f');*/
 
     private $byte1 = array('-' => '2d', '\'' => 27, '0' => 30, '1' => 31, '2' => 32, '3' => 33, '4' => 34, '5' => 35,
         '6' => 36, '7' => 37, '8' => 38, '9' => 39,
             'a' => 97,
-            'b' => 99,
+            'b' => 98,
             'c' => 99,
             'd' => 100,
             'e' => 101,
@@ -132,15 +122,6 @@ class Yatrie
 
     private $rbyte3 = [];
     private $rbyte2 = [];
-    /*private $rbyte3 = array('e28099' => '’');
-
-    private $rbyte2 = array('d0b0' => 'а', 'd0b1' => 'б', 'd0b2' => 'в', 'd0b3' => 'г', 'd0b4' => 'д',
-            'd0b5' => 'е', 'd191' => 'ё', 'd0b6' => 'ж', 'd0b7' => 'з', 'd0b8' => 'и', 'd0b9' => 'й',
-            'd0ba' => 'к', 'd0bb' => 'л', 'd0bc' => 'м', 'd0bd' => 'н', 'd0be' => 'о', 'd0bf' => 'п',
-            'd180' => 'р', 'd181' => 'с', 'd182' => 'т', 'd183' => 'у', 'd184' => 'ф', 'd185' => 'х',
-            'd186' => 'ц', 'd187' => 'ч', 'd188' => 'ш', 'd189' => 'щ', 'd18a' => 'ъ', 'd18b' => 'ы',
-            'd18c' => 'ь', 'd18d' => 'э', 'd18e' => 'ю', 'd18f' => 'я',);
-    */
 
     private $rbyte1 = array(
             '2d' => '-',
@@ -156,7 +137,7 @@ class Yatrie
             38 => 8,
             39 => 9,
              97 => 'a',
-             99 => 'b',
+             98 => 'b',
              99 => 'c',
             100 => 'd',
             101 => 'e',
@@ -612,7 +593,7 @@ class Yatrie
         //we save second char to the first letter node etc
         $saved = true;
         for ($i = 1; $i < $cnt; ++$i) {
-            $parent_id = $this->trie_char_add($i, $parent_id, $abc[$i]);
+            $parent_id = $this->trie_char_add($parent_id, $abc[$i]);
             if (!$parent_id) {
                 $saved = false;
                 break;
@@ -675,16 +656,14 @@ class Yatrie
         return $next_node_id;
     }
 
-
     /**
-     * @param int $parent_id
+     * @param int    $parent_id
      * @param string $char
+     *
      * @return int
      */
-    private function trie_char_add(int $level, int $parent_id, string $char)
+    private function trie_char_add(int $parent_id, string $char)
     {
-        //print "level:$level parent:$parent_id char:$char\n";
-
         //get memory block number
         $block = &$this->nodes_block($parent_id);
 
@@ -695,7 +674,6 @@ class Yatrie
 
         //number of bits before the current char position in the codepage
         if (!isset($this->codepage[$char])) {
-            // TODO log failures
             return null;
         }
 
