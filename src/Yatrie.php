@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/TrieInterface.php';
 
 class Yatrie implements TrieInterface
 {
