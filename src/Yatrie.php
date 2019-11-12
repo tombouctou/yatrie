@@ -856,6 +856,10 @@ class Yatrie
     public function trie_check(string $word)
     {
         $abc = $this->str_split_rus_mod($word);
+        if (!$abc) {
+            return false;
+        }
+
         $cnt = count($abc);
 
         $parent_id = $this->codepage_index[$abc[0]];
