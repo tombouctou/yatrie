@@ -515,6 +515,7 @@ class TestYatrie extends TestCase
 
 
         //create sample dic
+        /** @noinspection PhpUndefinedFieldInspection */
         $t->dic = [0 => ''];
 
         //create first node
@@ -845,6 +846,7 @@ class TestYatrie extends TestCase
      * @param int $ref
      * @test
      * @dataProvider data_ref_insert
+     * @noinspection DuplicatedCode
      */
     public function test_refs_get(int $ref_id, int $pos, int $ref)
     {
