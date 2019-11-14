@@ -490,7 +490,8 @@ class Yatrie implements TrieInterface
     public function node_get_char_flag(int $id)
     {
         $node = $this->node_get($id);
-        return $this->bit_get($node[0], $this->codepage['flag']);
+        $bit = $this->codepage['flag'];
+        return $this->bit_get($node[0], $bit);
     }
 
     /**
@@ -676,17 +677,18 @@ class Yatrie implements TrieInterface
      */
     public function check(string $word)
     {
-        $abc = $this->str_split_mod($word);
-        if (!$abc) {
+        $letters = $this->str_split_mod($word);
+        if (!$letters) {
             return false;
         }
 
-        $cnt = count($abc);
+        $cnt = count($letters);
 
-        $parent_id = $this->codepage_index[$abc[0]];
+        $parent_id = $this->codepage_index[$letters[0]];
 
         for ($i = 1; $i < $cnt; ++$i) {
-            $parent_id = $this->node_char_get_ref($parent_id, $abc[$i]);
+            $letter = $letters[$i];
+            $parent_id = $this->node_char_get_ref($parent_id, $letter);
             if ($parent_id === false) {
                 return false;
             }
